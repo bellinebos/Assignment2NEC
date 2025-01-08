@@ -1,3 +1,7 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+
 def read_job_operations_from_file(file_name):
     job_operations = []
     
