@@ -209,4 +209,19 @@ def plot_fitness_history(fitness_history):
 
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
-print(job_operations)
+
+# Combination 1
+
+best_solution, best_fitness, fitness_history = genetic_algorithm(
+    job_operations,
+    population_size=200,
+    generations=500,
+    crossover_rate=0.8,
+    mutation_rate=0.05,
+    elitism=False,
+    selection_method="rank",
+    crossover_method="two_point",
+    mutation_method="swap"
+)
+
+plot_fitness_history(fitness_history)
