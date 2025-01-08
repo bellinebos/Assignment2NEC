@@ -158,12 +158,26 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
     return best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, computational_time
 
 
-def compute_fitness(chromosome, job_operations):
-    decoded_schedule, machine_times = decode_chromosome(chromosome, job_operations)
+def compute_fitness(individual, job_operations):
+    """
+    Calculate the fitness of an individual based on the sum of processing times.
+    
+    Parameters:
+        individual: List of task indices representing the order of execution.
+        job_operations: List of jobs, each as a list of (machine, processing_time) tuples.
+    
+    Returns:
+        fitness: The sum of processing times for all tasks.
+    """
+    total_processing_time = 0
+    
+    for job_id, task_id in individual:
+        # Get the processing time directly from the job_operations
+        _, processing_time = job_operations[job_id][task_id]
+        total_processing_time += processing_time
 
-    # Calculate makespan (maximum time across all machines)
-    makespan = max(machine_times.values())
-    return makespan
+    return total_processing_time
+
 
 def rank_selection(population, fitness):
     """
