@@ -15,4 +15,5 @@ def read_job_operations_from_file(file_path):
     return job_operations
 
 # Read job operations from a text file
-job_operations = read_job_operations_from_file('job_operations.txt')
+job_operations = read_job_operations_from_file('problem1.txt')
+print(job_operations)
