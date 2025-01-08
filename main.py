@@ -171,18 +171,26 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
 def compute_fitness(individual, job_operations):
     """
     Calculate fitness as the makespan of the schedule.
+    Ensures that the precedence constraints and machine constraints are respected.
     """
-    machine_times = {}  # Track end times for each machine
+    machine_times = {machine: 0 for machine in range(len(job_operations[0]))}  # Track end times for each machine
+    job_end_times = {job_id: 0 for job_id in range(len(job_operations))}  # Track the end time of the last task of each job
 
     for job_id, task_id in individual:
         machine, processing_time = job_operations[job_id][task_id]
 
-        # Determine the earliest start time for the machine
-        machine_start_time = machine_times.get(machine, 0)
-        machine_times[machine] = machine_start_time + processing_time
+        # Ensure that the task starts only after the previous task for the same job is completed
+        job_start_time = job_end_times[job_id]  # The task must start after the last task of the same job finishes
+        task_start_time = max(machine_times[machine], job_start_time)  # The task starts after the machine is available and job precedence is respected
+        task_end_time = task_start_time + processing_time  # Task's end time
 
-    # Fitness is the maximum end time (makespan)
+        # Update the machine's availability time and the job's last task end time
+        machine_times[machine] = task_end_time
+        job_end_times[job_id] = task_end_time  # Update the last task end time for the job
+
+    # Fitness is the maximum end time across all machines (makespan)
     return max(machine_times.values())
+
 
 def rank_selection(population, fitness):
     """
