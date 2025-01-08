@@ -14,6 +14,14 @@ def read_job_operations_from_file(file_name):
 
     return job_operations
 
+def generate_chromosome(job_operations):
+    chromosome = []
+    for job in range(len(job_operations) - 1):  # Incorrect range
+        num_operations = len(job_operations[job])
+        operation_idx = random.randint(0, num_operations - 1)
+        chromosome.append((job, operation_idx))
+    return chromosome
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
