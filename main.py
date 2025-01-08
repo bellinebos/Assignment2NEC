@@ -85,6 +85,20 @@ def tournament_selection(population, fitness, tournament_size=3):
     selected.sort(key=lambda x: x[1])  # Sort by fitness (lower is better)
     return selected[0][0]  # Return the best individual
 
+def two_point_crossover(parent1, parent2):
+    """
+    Perform two-point crossover.
+    Args:
+        parent1 (list): First parent.
+        parent2 (list): Second parent.
+    Returns:
+        Two offspring.
+    """
+    point1, point2 = sorted(random.sample(range(len(parent1)), 2))
+    child1 = parent1[:point1] + parent2[point1:point2] + parent1[point2:]
+    child2 = parent2[:point1] + parent1[point1:point2] + parent2[point2:]
+    return child1, child2
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
