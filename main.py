@@ -73,18 +73,17 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
     # Start the timer for computational time
     start_time = time.time()
 
-    # Print the current combination being used
     print(f"Running with Combination: Selection={selection_method}, Crossover={crossover_method}, Mutation={mutation_method}, Elitism={elitism}")
 
     num_jobs = len(job_operations)
-    num_machines = len(job_operations[0])
-    population = generate_initial_population(num_jobs, num_machines, population_size)
+    num_tasks = max(len(job) for job in job_operations)  # Maximum tasks across jobs
+    population = generate_initial_population(num_jobs, num_tasks, population_size)
 
     best_fitness = float('inf')
     best_solution = None
     fitness_history = []
-    avg_fitness_history = []  # Track average fitness history
-    generation_converged = 0  # Track number of generations for convergence
+    avg_fitness_history = []
+    generation_converged = 0
 
     for generation in range(generations):
         fitness = [compute_fitness(individual, job_operations) for individual in population]
@@ -93,32 +92,28 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
         generation_best_fitness = min(fitness)
         fitness_history.append(generation_best_fitness)
 
-        # Calculate the average fitness of the current generation
         avg_fitness = np.mean(fitness)
         avg_fitness_history.append(avg_fitness)
 
-        # Check for convergence: If the best fitness hasn't improved after a certain number of generations
         if generation > 0 and generation_best_fitness == fitness_history[generation - 1]:
             generation_converged += 1
         else:
-            generation_converged = 0  # Reset if fitness improves
+            generation_converged = 0
 
-        # Elitism: Keep the best individual from the current generation
+        # Elitism: Keep the best individual
         new_population = []
         if elitism:
             elite_idx = np.argmin(fitness)
             new_population.append(population[elite_idx])
 
         while len(new_population) < population_size:
-            # Select parents using the specified selection method
             if selection_method == "rank":
                 parent1 = rank_selection(population, fitness)
-                parent2 = tournament_selection(population, fitness)
+                parent2 = rank_selection(population, fitness)
             elif selection_method == "tournament":
                 parent1 = tournament_selection(population, fitness)
                 parent2 = tournament_selection(population, fitness)
 
-            # Apply crossover and mutation
             if crossover_method == "two_point":
                 if random.random() < crossover_rate:
                     child1, child2 = two_point_crossover(parent1, parent2)
@@ -141,25 +136,21 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
                 if random.random() < mutation_rate:
                     inverse_mutation(child2)
 
-            # Add the children to the new population
-            new_population.extend([child1, child2])
+            new_population.extend([repair_chromosome(child1), repair_chromosome(child2)])
 
-        # Limit the new population to the specified population size
+        # Update the population
         population = new_population[:population_size]
 
-        # Track the best solution of the current generation
         if generation_best_fitness < best_fitness:
             best_fitness = generation_best_fitness
             best_solution = population[np.argmin(fitness)]
 
         print(f"Generation {generation + 1}: Best Fitness = {generation_best_fitness}, Average Fitness = {avg_fitness}")
 
-        # Check if the algorithm has converged (if no improvement for 50 generations)
         if generation_converged > 50:
             print(f"Convergence detected at generation {generation + 1}")
             break
 
-    # End the timer and calculate computational time
     end_time = time.time()
     computational_time = end_time - start_time
 
@@ -169,7 +160,6 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
     print(f"Computational Time: {computational_time:.2f} seconds")
 
     return best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, computational_time
-
 
 def compute_fitness(individual, job_operations):
     """
