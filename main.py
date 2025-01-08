@@ -99,6 +99,17 @@ def two_point_crossover(parent1, parent2):
     child2 = parent2[:point1] + parent1[point1:point2] + parent2[point2:]
     return child1, child2
 
+def swap_mutation(individual):
+    """
+    Perform swap mutation on an individual.
+    Args:
+        individual (list): Individual to mutate.
+    Returns:
+        Mutated individual.
+    """
+    idx1, idx2 = random.sample(range(len(individual)), 2)
+    individual[idx1], individual[idx2] = individual[idx2], individual[idx1]
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
