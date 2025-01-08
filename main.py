@@ -242,7 +242,7 @@ job_operations = read_job_operations_from_file('problem1.txt')
 
 # Combination 1
 
-best_solution, best_fitness, fitness_history = genetic_algorithm(
+best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, computational_time = genetic_algorithm(
     job_operations,
     population_size=200,
     generations=500,
