@@ -28,7 +28,7 @@ def generate_initial_population(num_jobs, num_machines, population_size):
     for _ in range(population_size):
         individual = []
         for job_id in range(num_jobs):
-            individual += [job_id] * num_machines
+            individual += [job_id] * num_machines  # Assuming each job has 'num_machines' operations
         random.shuffle(individual)
         population.append(individual)
     return population
