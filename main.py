@@ -33,6 +33,27 @@ def generate_initial_population(num_jobs, num_machines, population_size):
         population.append(individual)
     return population
 
+def decode_chromosome(chromosome, job_operations):
+    machine_schedule = [[] for _ in range(len(job_operations[0]))]
+    job_indices = [0] * len(job_operations)
+    time_tracker = [0] * len(job_operations[0])
+    job_end_time = [0] * len(job_operations)
+
+    for gene in chromosome:
+        job = gene
+        operation_idx = job_indices[job]
+        machine, processing_time = job_operations[job][operation_idx]
+
+        start_time = max(time_tracker[machine], job_end_time[job])
+        end_time = start_time + processing_time
+
+        machine_schedule[machine].append((start_time, end_time, job))
+        time_tracker[machine] = end_time
+        job_end_time[job] = end_time
+        job_indices[job] += 1
+
+    return machine_schedule
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
