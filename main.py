@@ -27,13 +27,13 @@ def generate_chromosome(job_operations):
         chromosome.append((job, operation_idx))  # Proper tuple (job, operation_idx)
     return chromosome
 
-def generate_initial_population(num_jobs, num_machines, population_size):
+def generate_initial_population(num_jobs, num_tasks, population_size):
     population = []
     for _ in range(population_size):
         individual = []
         for job_id in range(num_jobs):
-            individual += [job_id] * num_machines  # Assuming each job has 'num_machines' operations
-        random.shuffle(individual)
+            individual += [(job_id, task_id) for task_id in range(num_tasks)]  # Include job-task pairing
+        random.shuffle(individual)  # Shuffle the sequence to create diverse individuals
         population.append(individual)
     return population
 
