@@ -23,6 +23,16 @@ def generate_chromosome(job_operations):
         chromosome.append((job, operation_idx))  # Proper tuple (job, operation_idx)
     return chromosome
 
+def generate_initial_population(num_jobs, num_machines, population_size):
+    population = []
+    for _ in range(population_size):
+        individual = []
+        for job_id in range(num_jobs):
+            individual += [job_id] * num_machines
+        random.shuffle(individual)
+        population.append(individual)
+    return population
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
