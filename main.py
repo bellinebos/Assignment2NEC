@@ -50,6 +50,51 @@ def decode_chromosome(chromosome, job_operations):
 
     return decoded_schedule, machine_times
 
+def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.2, elitism=True):
+    num_jobs = len(job_operations)
+    num_machines = len(job_operations[0])
+    population = generate_initial_population(num_jobs, num_machines, population_size)
+
+    best_fitness = float('inf')
+    best_solution = None
+    fitness_history = []
+
+    for generation in range(generations):
+        fitness = [compute_fitness(individual, job_operations) for individual in population]
+        new_population = []
+
+        if elitism:
+            elite_idx = np.argmin(fitness)
+            new_population.append(population[elite_idx])
+
+        while len(new_population) < population_size:
+            parent1 = rank_selection(population, fitness)
+            parent2 = tournament_selection(population, fitness)
+
+            if random.random() < crossover_rate:
+                child1, child2 = two_point_crossover(parent1, parent2)
+            else:
+                child1, child2 = parent1[:], parent2[:]
+
+            if random.random() < mutation_rate:
+                swap_mutation(child1)
+            if random.random() < mutation_rate:
+                inverse_mutation(child2)
+
+            new_population.extend([child1, child2])
+
+        population = new_population[:population_size]
+        generation_best_fitness = min(fitness)
+        fitness_history.append(generation_best_fitness)
+
+        if generation_best_fitness < best_fitness:
+            best_fitness = generation_best_fitness
+            best_solution = population[np.argmin(fitness)]
+
+        print(f"Generation {generation + 1}: Best Fitness = {generation_best_fitness}")
+
+    return best_solution, best_fitness, fitness_history
+
 def compute_fitness(chromosome, job_operations):
     decoded_schedule, machine_times = decode_chromosome(chromosome, job_operations)
 
