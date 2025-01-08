@@ -54,6 +54,10 @@ def decode_chromosome(chromosome, job_operations):
 
     return machine_schedule
 
+def compute_fitness(chromosome, job_operations):
+    machine_schedule = decode_chromosome(chromosome, job_operations)
+    return max([schedule[-1][1] if schedule else 0 for schedule in machine_schedule])
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
