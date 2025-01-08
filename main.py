@@ -38,21 +38,20 @@ def generate_initial_population(num_jobs, num_tasks, population_size):
     return population
 
 def decode_chromosome(chromosome, job_operations):
-    decoded_schedule = []
-    machine_times = {i: 0 for i in range(len(job_operations[0]))}  # Initialize machine_times for all machines
+    machine_schedules = {machine: [] for machine in range(len(job_operations[0]))}
+    machine_times = {machine: 0 for machine in range(len(job_operations[0]))}
 
-    for i, job_idx in enumerate(chromosome):
-        job_ops = job_operations[job_idx]
-        op_idx = i % len(job_ops)  # Select operation based on chromosome position
-        operation = job_ops[op_idx]  # Get the operation (list of tuples: machine, time)
+    for job_id, task_id in chromosome:
+        machine, processing_time = job_operations[job_id][task_id]
 
-        # Check if operation is valid (should be a tuple (machine, processing time))
-        if isinstance(operation, tuple):
-            machine, processing_time = operation
-            decoded_schedule.append((job_idx, op_idx, machine, processing_time))
-            machine_times[machine] += processing_time  # Add the processing time to the machine
+        # Assign the task to the machine
+        start_time = machine_times[machine]
+        end_time = start_time + processing_time
 
-    return decoded_schedule, machine_times
+        machine_schedules[machine].append((job_id, task_id, start_time, end_time))
+        machine_times[machine] = end_time  # Update the machine's finish time
+
+    return machine_schedules, machine_times
 
 def repair_chromosome(chromosome):
     """
