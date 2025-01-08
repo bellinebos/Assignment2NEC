@@ -16,10 +16,11 @@ def read_job_operations_from_file(file_name):
 
 def generate_chromosome(job_operations):
     chromosome = []
-    for job in range(len(job_operations) - 1):  # Incorrect range
+    for job in range(len(job_operations)):
+        # Assuming each job has multiple operations
         num_operations = len(job_operations[job])
         operation_idx = random.randint(0, num_operations - 1)
-        chromosome.append((job, operation_idx))
+        chromosome.append((job, operation_idx))  # Proper tuple (job, operation_idx)
     return chromosome
 
 # Read job operations from a text file
