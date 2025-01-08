@@ -57,6 +57,20 @@ def compute_fitness(chromosome, job_operations):
     makespan = max(machine_times.values())
     return makespan
 
+def rank_selection(population, fitness):
+    """
+    Perform rank-based selection.
+    Args:
+        population (list): The current population.
+        fitness (list): Fitness values of the population.
+    Returns:
+        Selected individual.
+    """
+    sorted_population = [x for _, x in sorted(zip(fitness, population))]
+    total_rank = sum(range(1, len(sorted_population) + 1))
+    probabilities = [rank / total_rank for rank in range(1, len(sorted_population) + 1)]
+    selected_index = random.choices(range(len(sorted_population)), weights=probabilities, k=1)[0]
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
