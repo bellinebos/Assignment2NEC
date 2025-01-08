@@ -160,24 +160,19 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
 
 def compute_fitness(individual, job_operations):
     """
-    Calculate the fitness of an individual based on the sum of processing times.
-    
-    Parameters:
-        individual: List of task indices representing the order of execution.
-        job_operations: List of jobs, each as a list of (machine, processing_time) tuples.
-    
-    Returns:
-        fitness: The sum of processing times for all tasks.
+    Calculate fitness as the makespan of the schedule.
     """
-    total_processing_time = 0
-    
+    machine_times = {}  # Track end times for each machine
+
     for job_id, task_id in individual:
-        # Get the processing time directly from the job_operations
-        _, processing_time = job_operations[job_id][task_id]
-        total_processing_time += processing_time
+        machine, processing_time = job_operations[job_id][task_id]
 
-    return total_processing_time
+        # Determine the earliest start time for the machine
+        machine_start_time = machine_times.get(machine, 0)
+        machine_times[machine] = machine_start_time + processing_time
 
+    # Fitness is the maximum end time (makespan)
+    return max(machine_times.values())
 
 def rank_selection(population, fitness):
     """
