@@ -194,6 +194,31 @@ def tournament_selection(population, fitness, tournament_size=3):
     selected.sort(key=lambda x: x[1])  # Sort by fitness (lower is better)
     return selected[0][0]  # Return the best individual
 
+import random
+
+def uniform_crossover(parent1, parent2):
+    """
+    Perform uniform crossover between two parent chromosomes.
+
+    Args:
+    - parent1: List of genes representing the first parent.
+    - parent2: List of genes representing the second parent.
+
+    Returns:
+    - offspring: List of genes representing the offspring after crossover.
+    """
+    offspring = []
+    
+    # Iterate through each gene in the chromosomes
+    for gene1, gene2 in zip(parent1, parent2):
+        # Randomly select a gene from either parent
+        if random.random() < 0.5:  # 50% chance to pick from parent1 or parent2
+            offspring.append(gene1)
+        else:
+            offspring.append(gene2)
+    
+    return offspring
+
 def two_point_crossover(parent1, parent2):
     """
     Perform two-point crossover.
