@@ -34,25 +34,21 @@ def generate_initial_population(num_jobs, num_machines, population_size):
     return population
 
 def decode_chromosome(chromosome, job_operations):
-    machine_schedule = [[] for _ in range(len(job_operations[0]))]
-    job_indices = [0] * len(job_operations)
-    time_tracker = [0] * len(job_operations[0])
-    job_end_time = [0] * len(job_operations)
+    decoded_schedule = []
+    machine_times = {i: 0 for i in range(len(job_operations[0]))}  # Initialize machine_times for all machines
 
-    for gene in chromosome:
-        job = gene
-        operation_idx = job_indices[job]
-        machine, processing_time = job_operations[job][operation_idx]
+    for i, job_idx in enumerate(chromosome):
+        job_ops = job_operations[job_idx]
+        op_idx = i % len(job_ops)  # Select operation based on chromosome position
+        operation = job_ops[op_idx]  # Get the operation (list of tuples: machine, time)
 
-        start_time = max(time_tracker[machine], job_end_time[job])
-        end_time = start_time + processing_time
+        # Check if operation is valid (should be a tuple (machine, processing time))
+        if isinstance(operation, tuple):
+            machine, processing_time = operation
+            decoded_schedule.append((job_idx, op_idx, machine, processing_time))
+            machine_times[machine] += processing_time  # Add the processing time to the machine
 
-        machine_schedule[machine].append((start_time, end_time, job))
-        time_tracker[machine] = end_time
-        job_end_time[job] = end_time
-        job_indices[job] += 1
-
-    return machine_schedule
+    return decoded_schedule, machine_times
 
 def compute_fitness(chromosome, job_operations):
     decoded_schedule, machine_times = decode_chromosome(chromosome, job_operations)
