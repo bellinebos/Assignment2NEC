@@ -144,6 +144,7 @@ def rank_selection(population, fitness):
     total_rank = sum(range(1, len(sorted_population) + 1))
     probabilities = [rank / total_rank for rank in range(1, len(sorted_population) + 1)]
     selected_index = random.choices(range(len(sorted_population)), weights=probabilities, k=1)[0]
+    return sorted_population[selected_index]
 
 def tournament_selection(population, fitness, tournament_size=3):
     """
