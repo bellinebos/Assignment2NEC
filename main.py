@@ -229,17 +229,16 @@ def uniform_crossover(parent1, parent2):
     return offspring
 
 def two_point_crossover(parent1, parent2):
-    """
-    Perform two-point crossover.
-    Args:
-        parent1 (list): First parent.
-        parent2 (list): Second parent.
-    Returns:
-        Two offspring.
-    """
-    point1, point2 = sorted(random.sample(range(len(parent1)), 2))
+    size = len(parent1)
+    point1, point2 = sorted(random.sample(range(size), 2))
+
     child1 = parent1[:point1] + parent2[point1:point2] + parent1[point2:]
     child2 = parent2[:point1] + parent1[point1:point2] + parent2[point2:]
+
+    # Ensure valid job-task sequences
+    child1 = repair_chromosome(child1)
+    child2 = repair_chromosome(child2)
+
     return child1, child2
 
 def swap_mutation(individual):
