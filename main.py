@@ -57,6 +57,9 @@ def decode_chromosome(chromosome, job_operations):
 def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.2, elitism=True,
                       selection_method="rank", crossover_method="two_point", mutation_method="swap"):
 
+    # Start the timer for computational time
+    start_time = time.time()
+
     # Print the current combination being used
     print(f"Running with Combination: Selection={selection_method}, Crossover={crossover_method}, Mutation={mutation_method}, Elitism={elitism}")
 
@@ -67,12 +70,28 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
     best_fitness = float('inf')
     best_solution = None
     fitness_history = []
+    avg_fitness_history = []  # Track average fitness history
+    generation_converged = 0  # Track number of generations for convergence
 
     for generation in range(generations):
         fitness = [compute_fitness(individual, job_operations) for individual in population]
-        new_population = []
+        
+        # Track the best fitness
+        generation_best_fitness = min(fitness)
+        fitness_history.append(generation_best_fitness)
+
+        # Calculate the average fitness of the current generation
+        avg_fitness = np.mean(fitness)
+        avg_fitness_history.append(avg_fitness)
+
+        # Check for convergence: If the best fitness hasn't improved after a certain number of generations
+        if generation > 0 and generation_best_fitness == fitness_history[generation - 1]:
+            generation_converged += 1
+        else:
+            generation_converged = 0  # Reset if fitness improves
 
         # Elitism: Keep the best individual from the current generation
+        new_population = []
         if elitism:
             elite_idx = np.argmin(fitness)
             new_population.append(population[elite_idx])
@@ -81,12 +100,12 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
             # Select parents using the specified selection method
             if selection_method == "rank":
                 parent1 = rank_selection(population, fitness)
-                parent2 = tournament_selection(population, fitness)  # Alternatively, you can also use rank_selection for parent2
+                parent2 = tournament_selection(population, fitness)
             elif selection_method == "tournament":
                 parent1 = tournament_selection(population, fitness)
                 parent2 = tournament_selection(population, fitness)
 
-            # Apply the specified crossover method
+            # Apply crossover and mutation
             if crossover_method == "two_point":
                 if random.random() < crossover_rate:
                     child1, child2 = two_point_crossover(parent1, parent2)
@@ -98,7 +117,6 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
                 else:
                     child1, child2 = parent1[:], parent2[:]
 
-            # Apply the specified mutation method
             if mutation_method == "swap":
                 if random.random() < mutation_rate:
                     swap_mutation(child1)
@@ -117,16 +135,28 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
         population = new_population[:population_size]
 
         # Track the best solution of the current generation
-        generation_best_fitness = min(fitness)
-        fitness_history.append(generation_best_fitness)
-
         if generation_best_fitness < best_fitness:
             best_fitness = generation_best_fitness
             best_solution = population[np.argmin(fitness)]
 
-        print(f"Generation {generation + 1}: Best Fitness = {generation_best_fitness}")
+        print(f"Generation {generation + 1}: Best Fitness = {generation_best_fitness}, Average Fitness = {avg_fitness}")
 
-    return best_solution, best_fitness, fitness_history
+        # Check if the algorithm has converged (if no improvement for 50 generations)
+        if generation_converged > 50:
+            print(f"Convergence detected at generation {generation + 1}")
+            break
+
+    # End the timer and calculate computational time
+    end_time = time.time()
+    computational_time = end_time - start_time
+
+    print(f"Best Fitness: {best_fitness}")
+    print(f"Average Fitness (last generation): {avg_fitness}")
+    print(f"Generations to Converge: {generation_converged}")
+    print(f"Computational Time: {computational_time:.2f} seconds")
+
+    return best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, computational_time
+
 
 def compute_fitness(chromosome, job_operations):
     decoded_schedule, machine_times = decode_chromosome(chromosome, job_operations)
