@@ -110,6 +110,17 @@ def swap_mutation(individual):
     idx1, idx2 = random.sample(range(len(individual)), 2)
     individual[idx1], individual[idx2] = individual[idx2], individual[idx1]
 
+def inverse_mutation(individual):
+    """
+    Perform inverse mutation on an individual.
+    Args:
+        individual (list): Individual to mutate.
+    Returns:
+        Mutated individual.
+    """
+    idx1, idx2 = sorted(random.sample(range(len(individual)), 2))
+    individual[idx1:idx2] = reversed(individual[idx1:idx2])
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
