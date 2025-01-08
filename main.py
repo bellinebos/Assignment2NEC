@@ -71,6 +71,20 @@ def rank_selection(population, fitness):
     probabilities = [rank / total_rank for rank in range(1, len(sorted_population) + 1)]
     selected_index = random.choices(range(len(sorted_population)), weights=probabilities, k=1)[0]
 
+def tournament_selection(population, fitness, tournament_size=3):
+    """
+    Perform tournament selection.
+    Args:
+        population (list): The current population.
+        fitness (list): Fitness values of the population.
+        tournament_size (int): Number of individuals in the tournament.
+    Returns:
+        Selected individual.
+    """
+    selected = random.sample(list(zip(population, fitness)), tournament_size)
+    selected.sort(key=lambda x: x[1])  # Sort by fitness (lower is better)
+    return selected[0][0]  # Return the best individual
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
