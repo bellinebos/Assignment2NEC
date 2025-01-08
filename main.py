@@ -67,11 +67,8 @@ def repair_chromosome(chromosome):
 
     return repaired
 
-def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.2, elitism=True,
+def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.01, elitism=True,
                       selection_method="rank", crossover_method="two_point", mutation_method="swap"):
-
-    # Start the timer for computational time
-    start_time = time.time()
 
     print(f"Running with Combination: Selection={selection_method}, Crossover={crossover_method}, Mutation={mutation_method}, Elitism={elitism}")
 
@@ -151,15 +148,19 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
             print(f"Convergence detected at generation {generation + 1}")
             break
 
-    end_time = time.time()
-    computational_time = end_time - start_time
+    # Decode the best solution to get the schedule and machine times
+    machine_schedules, machine_times = decode_chromosome(best_solution, job_operations)
+    
+    # Calculate the processing time (makespan) of the best solution
+    processing_time = max(machine_times.values())
 
     print(f"Best Fitness: {best_fitness}")
     print(f"Average Fitness (last generation): {avg_fitness}")
     print(f"Generations to Converge: {generation_converged}")
-    print(f"Computational Time: {computational_time:.2f} seconds")
+    print(f"Processing Time (Makespan) of Best Solution: {processing_time}")
 
-    return best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, computational_time
+    # Returning the solution, fitness, processing time, etc.
+    return best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, processing_time
 
 def compute_fitness(individual, job_operations):
     """
