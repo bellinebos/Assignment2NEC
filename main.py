@@ -50,7 +50,12 @@ def decode_chromosome(chromosome, job_operations):
 
     return decoded_schedule, machine_times
 
-def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.2, elitism=True):
+def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.2, elitism=True,
+                      selection_method="rank", crossover_method="two_point", mutation_method="swap"):
+
+    # Print the current combination being used
+    print(f"Running with Combination: Selection={selection_method}, Crossover={crossover_method}, Mutation={mutation_method}, Elitism={elitism}")
+
     num_jobs = len(job_operations)
     num_machines = len(job_operations[0])
     population = generate_initial_population(num_jobs, num_machines, population_size)
@@ -63,27 +68,51 @@ def genetic_algorithm(job_operations, population_size=100, generations=500, cros
         fitness = [compute_fitness(individual, job_operations) for individual in population]
         new_population = []
 
+        # Elitism: Keep the best individual from the current generation
         if elitism:
             elite_idx = np.argmin(fitness)
             new_population.append(population[elite_idx])
 
         while len(new_population) < population_size:
-            parent1 = rank_selection(population, fitness)
-            parent2 = tournament_selection(population, fitness)
+            # Select parents using the specified selection method
+            if selection_method == "rank":
+                parent1 = rank_selection(population, fitness)
+                parent2 = tournament_selection(population, fitness)  # Alternatively, you can also use rank_selection for parent2
+            elif selection_method == "tournament":
+                parent1 = tournament_selection(population, fitness)
+                parent2 = tournament_selection(population, fitness)
 
-            if random.random() < crossover_rate:
-                child1, child2 = two_point_crossover(parent1, parent2)
-            else:
-                child1, child2 = parent1[:], parent2[:]
+            # Apply the specified crossover method
+            if crossover_method == "two_point":
+                if random.random() < crossover_rate:
+                    child1, child2 = two_point_crossover(parent1, parent2)
+                else:
+                    child1, child2 = parent1[:], parent2[:]
+            elif crossover_method == "uniform":
+                if random.random() < crossover_rate:
+                    child1, child2 = uniform_crossover(parent1, parent2)
+                else:
+                    child1, child2 = parent1[:], parent2[:]
 
-            if random.random() < mutation_rate:
-                swap_mutation(child1)
-            if random.random() < mutation_rate:
-                inverse_mutation(child2)
+            # Apply the specified mutation method
+            if mutation_method == "swap":
+                if random.random() < mutation_rate:
+                    swap_mutation(child1)
+                if random.random() < mutation_rate:
+                    swap_mutation(child2)
+            elif mutation_method == "inverse":
+                if random.random() < mutation_rate:
+                    inverse_mutation(child1)
+                if random.random() < mutation_rate:
+                    inverse_mutation(child2)
 
+            # Add the children to the new population
             new_population.extend([child1, child2])
 
+        # Limit the new population to the specified population size
         population = new_population[:population_size]
+
+        # Track the best solution of the current generation
         generation_best_fitness = min(fitness)
         fitness_history.append(generation_best_fitness)
 
