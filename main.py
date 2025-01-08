@@ -121,6 +121,13 @@ def inverse_mutation(individual):
     idx1, idx2 = sorted(random.sample(range(len(individual)), 2))
     individual[idx1:idx2] = reversed(individual[idx1:idx2])
 
+def plot_fitness_history(fitness_history):
+    plt.plot(fitness_history)
+    plt.title("Fitness Evolution")
+    plt.xlabel("Generations")
+    plt.ylabel("Fitness")
+    plt.show()
+
 # Read job operations from a text file
 job_operations = read_job_operations_from_file('problem1.txt')
 print(job_operations)
