@@ -12,22 +12,14 @@ def read_job_operations_from_file(file_name):
             job_operations.append(operations)
     return job_operations
 
-def generate_chromosome(job_operations):
-    chromosome = []
-    for job in range(len(job_operations)):
-        # Assuming each job has multiple operations
-        num_operations = len(job_operations[job])
-        operation_idx = random.randint(0, num_operations - 1)
-        chromosome.append((job, operation_idx))  # Proper tuple (job, operation_idx)
-    return chromosome
-
-def generate_initial_population(num_jobs, num_tasks, population_size):
+def initialize_pop(job_operations, population_size):
     population = []
+    all_job_tasks = [(j, t) for j in range(len(job_operations)) 
+                     for t in range(len(job_operations[j]))]
+    
     for _ in range(population_size):
-        individual = []
-        for job_id in range(num_jobs):
-            individual += [(job_id, task_id) for task_id in range(num_tasks)]  # Include job-task pairing
-        random.shuffle(individual)  # Shuffle the sequence to create diverse individuals
+        individual = all_job_tasks.copy()
+        random.shuffle(individual)
         population.append(individual)
     return population
 
