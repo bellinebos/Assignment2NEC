@@ -24,26 +24,34 @@ def initialize_pop(job_operations, population_size):
     return population
 
 def decode_chromosome(chromosome, job_operations):
-    machine_schedules = {machine: [] for machine in range(len(job_operations[0]))}  # Machine schedules
-    machine_times = {machine: 0 for machine in range(len(job_operations[0]))}  # Machine times
-    job_end_times = {job_id: 0 for job_id in range(len(job_operations))}  # End time of the last task in each job
-
+    machine_schedules = {}
+    machine_times = {}
+    job_end_times = {j: 0 for j in range(len(job_operations))}
+    
+    # Initialize machine schedules and times
+    max_machine_id = max(machine for job in job_operations for machine, _ in job)
+    for m in range(max_machine_id + 1):
+        machine_schedules[m] = []
+        machine_times[m] = 0
+    
     for job_id, task_id in chromosome:
         machine, processing_time = job_operations[job_id][task_id]
-
-        # Ensure that no task starts before the previous task of the same job is completed
-        job_start_time = job_end_times[job_id]  # The task must start after the last task of the same job finishes
-        task_start_time = max(machine_times[machine], job_start_time)  # The task starts after the machine is available and the job's precedence constraint is satisfied
-        task_end_time = task_start_time + processing_time  # Task's end time
-
-        # Assign task to the machine
-        machine_schedules[machine].append((job_id, task_id, task_start_time, task_end_time))
-
-        # Update machine's availability time and job's end time
+        job_start_time = job_end_times[job_id]
+        task_start_time = max(machine_times[machine], job_start_time)
+        task_end_time = task_start_time + processing_time
+        
+        machine_schedules[machine].append({
+            'job': job_id,
+            'task': task_id,
+            'start': task_start_time,
+            'end': task_end_time
+        })
         machine_times[machine] = task_end_time
-        job_end_times[job_id] = task_end_time  # Update the job's last task end time
-
-    return machine_schedules, machine_times
+        job_end_times[job_id] = task_end_time
+    
+    # Return three values: machine schedules, machine times, and total processing time
+    total_processing_time = max(machine_times.values())
+    return machine_schedules, machine_times, total_processing_time
 
 def repair_chromosome(chromosome):
     """
