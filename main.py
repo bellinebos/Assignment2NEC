@@ -1,21 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import itertools
 
 def read_job_operations_from_file(file_name):
     job_operations = []
-    
     with open(file_name, 'r') as file:
-        lines = file.readlines()
-
-        for line in lines:
-            operations = []
-            values = list(map(int, line.split()))  # Read all integers in the line
-            # Group values in pairs (machine, processing_time)
-            for i in range(0, len(values), 2):
-                operations.append((values[i], values[i+1]))  # (machine, time)
+        for line in file:
+            values = list(map(int, line.strip().split()))
+            operations = [(values[i], values[i+1]) for i in range(0, len(values), 2)]
             job_operations.append(operations)
-
     return job_operations
 
 def generate_chromosome(job_operations):
