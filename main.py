@@ -147,94 +147,88 @@ def compute_fitness(individual, job_operations):
     _, machine_times, _ = decode_chromosome(individual, job_operations)
     return max(machine_times.values())  # Makespan
 
-def rank_selection(population, fitness):
-    """
-    Perform rank-based selection.
-    Args:
-        population (list): The current population.
-        fitness (list): Fitness values of the population.
-    Returns:
-        Selected individual.
-    """
-    sorted_population = [x for _, x in sorted(zip(fitness, population))]
-    total_rank = sum(range(1, len(sorted_population) + 1))
-    probabilities = [rank / total_rank for rank in range(1, len(sorted_population) + 1)]
-    selected_index = random.choices(range(len(sorted_population)), weights=probabilities, k=1)[0]
-    return sorted_population[selected_index]
-
 def tournament_selection(population, fitness, tournament_size=3):
     """
-    Perform tournament selection.
-    Args:
-        population (list): The current population.
-        fitness (list): Fitness values of the population.
-        tournament_size (int): Number of individuals in the tournament.
-    Returns:
-        Selected individual.
+    Select an individual using tournament selection.
+    Returns the winner of the tournament.
     """
-    selected = random.sample(list(zip(population, fitness)), tournament_size)
-    selected.sort(key=lambda x: x[1])  # Sort by fitness (lower is better)
-    return selected[0][0]  # Return the best individual
+    # Randomly select tournament_size individuals
+    tournament_indices = random.sample(range(len(population)), tournament_size)
+    # Find the one with best fitness (minimum makespan)
+    tournament = [(i, fitness[i]) for i in tournament_indices]
+    winner_idx = min(tournament, key=lambda x: x[1])[0]
+    return population[winner_idx]
 
-import random
+def rank_selection(population, fitness):
+    """
+    Select parents based on their rank in the population.
+    Returns two parents.
+    """
+    # Create list of (individual, fitness) pairs
+    pop_fitness = list(zip(population, fitness))
+    # Sort by fitness (lower is better)
+    sorted_pop = sorted(pop_fitness, key=lambda x: x[1])
+    # Extract just the sorted population
+    ranked_pop = [ind for ind, _ in sorted_pop]
+    
+    # Select from the better half of the population
+    better_half = len(ranked_pop) // 2
+    parent1 = ranked_pop[random.randint(0, better_half)]
+    parent2 = ranked_pop[random.randint(0, better_half)]
+    
+    return parent1, parent2
+
+def two_point_crossover(parent1, parent2):
+    """
+    Perform two-point crossover between parents.
+    Returns two children.
+    """
+    length = len(parent1)
+    # Select two random crossover points
+    point1, point2 = sorted(random.sample(range(length), 2))
+    
+    # Create children by combining segments
+    child1 = parent1[:point1] + parent2[point1:point2] + parent1[point2:]
+    child2 = parent2[:point1] + parent1[point1:point2] + parent2[point2:]
+    
+    return child1, child2
 
 def uniform_crossover(parent1, parent2):
     """
-    Perform uniform crossover between two parent chromosomes.
-
-    Args:
-    - parent1: List of genes representing the first parent.
-    - parent2: List of genes representing the second parent.
-
-    Returns:
-    - offspring: List of genes representing the offspring after crossover.
+    Perform uniform crossover between parents.
+    Each gene has 50% chance of being swapped.
     """
-    offspring = []
-    
-    # Iterate through each gene in the chromosomes
+    child1, child2 = [], []
     for gene1, gene2 in zip(parent1, parent2):
-        # Randomly select a gene from either parent
-        if random.random() < 0.5:  # 50% chance to pick from parent1 or parent2
-            offspring.append(gene1)
+        if random.random() < 0.5:
+            child1.append(gene1)
+            child2.append(gene2)
         else:
-            offspring.append(gene2)
-    
-    return offspring
-
-def two_point_crossover(parent1, parent2):
-    size = len(parent1)
-    point1, point2 = sorted(random.sample(range(size), 2))
-
-    child1 = parent1[:point1] + parent2[point1:point2] + parent1[point2:]
-    child2 = parent2[:point1] + parent1[point1:point2] + parent2[point2:]
-
-    # Ensure valid job-task sequences
-    child1 = repair_chromosome(child1)
-    child2 = repair_chromosome(child2)
-
+            child1.append(gene2)
+            child2.append(gene1)
     return child1, child2
 
 def swap_mutation(individual):
     """
-    Perform swap mutation on an individual.
-    Args:
-        individual (list): Individual to mutate.
-    Returns:
-        Mutated individual.
+    Perform swap mutation by exchanging two random positions.
     """
-    idx1, idx2 = random.sample(range(len(individual)), 2)
-    individual[idx1], individual[idx2] = individual[idx2], individual[idx1]
+    result = individual.copy()
+    # Select two random positions
+    pos1, pos2 = random.sample(range(len(result)), 2)
+    # Swap their values
+    result[pos1], result[pos2] = result[pos2], result[pos1]
+    return result
 
 def inverse_mutation(individual):
     """
-    Perform inverse mutation on an individual.
-    Args:
-        individual (list): Individual to mutate.
-    Returns:
-        Mutated individual.
+    Perform inverse mutation by reversing a subsequence.
     """
-    idx1, idx2 = sorted(random.sample(range(len(individual)), 2))
-    individual[idx1:idx2] = reversed(individual[idx1:idx2])
+    result = individual.copy()
+    # Select two random positions
+    pos1, pos2 = sorted(random.sample(range(len(result)), 2))
+    # Reverse the subsequence between these positions
+    result[pos1:pos2+1] = result[pos1:pos2+1][::-1]
+    return result
 
 def plot_fitness_history(fitness_history):
     plt.plot(fitness_history)
