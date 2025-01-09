@@ -59,7 +59,6 @@ def genetic_algorithm(job_operations, population_size=50, max_generations=5000,
                      mutation_method="swap", elitism=True):
     """
     Main genetic algorithm with configurable operators and elitism.
-    Now returns fitness_history as well.
     """
     population = initialize_pop(job_operations, population_size)
     best_fitness = float('inf')
