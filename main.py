@@ -230,11 +230,40 @@ def inverse_mutation(individual):
     result[pos1:pos2+1] = result[pos1:pos2+1][::-1]
     return result
 
-def plot_fitness_history(fitness_history):
-    plt.plot(fitness_history)
-    plt.title("Fitness Evolution")
-    plt.xlabel("Generations")
-    plt.ylabel("Fitness")
+def plot_fitness_evolution(fitness_history, title, save_path=None):
+    """
+    Plot the evolution of the minimum total traveling distance (fitness)
+    throughout the generations.
+    
+    Args:
+        fitness_history: List of best fitness values for each generation
+        title: Title for the plot
+        save_path: Optional path to save the figure
+    """
+    plt.figure(figsize=(10, 6))
+    plt.plot(fitness_history, 'b-', linewidth=2)
+    plt.title(title)
+    plt.xlabel('Generation')
+    plt.ylabel('Minimum Total Traveling Distance')
+    plt.grid(True)
+    
+    # Add markers for initial and final fitness
+    plt.plot(0, fitness_history[0], 'ro', label='Initial', markersize=8)
+    plt.plot(len(fitness_history)-1, fitness_history[-1], 'go', label='Final', markersize=8)
+    
+    # Add text annotations for improvement
+    initial_fitness = fitness_history[0]
+    final_fitness = fitness_history[-1]
+    improvement = ((initial_fitness - final_fitness) / initial_fitness) * 100
+    
+    plt.text(0.02, 0.98, f'Initial: {initial_fitness:.2f}\nFinal: {final_fitness:.2f}\nImprovement: {improvement:.1f}%',
+             transform=plt.gca().transAxes, verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+    
+    plt.legend()
+    
+    if save_path:
+        plt.savefig(save_path)
     plt.show()
 
 # Read job operations from a text file
