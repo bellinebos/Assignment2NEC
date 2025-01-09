@@ -53,20 +53,6 @@ def decode_chromosome(chromosome, job_operations):
     total_processing_time = max(machine_times.values())
     return machine_schedules, machine_times, total_processing_time
 
-def repair_chromosome(chromosome):
-    """
-    Ensures that each job-task pair appears exactly once in the chromosome.
-    """
-    seen = set()
-    repaired = []
-
-    for task in chromosome:
-        if task not in seen:
-            repaired.append(task)
-            seen.add(task)
-
-    return repaired
-
 def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.01, elitism=True,
                       selection_method="rank", crossover_method="two_point", mutation_method="swap"):
 
