@@ -266,21 +266,82 @@ def plot_fitness_evolution(fitness_history, title, save_path=None):
         plt.savefig(save_path)
     plt.show()
 
-# Read job operations from a text file
-job_operations = read_job_operations_from_file('problem1.txt')
+def test_combinations(job_operations):
+    """
+    Modified test_combinations function to handle the fitness_history
+    """
+    # Define all the parameter combinations
+    selection_methods = ["tournament", "rank"]
+    crossover_methods = ["two_point", "uniform"]
+    mutation_methods = ["swap", "inverse"]
+    elitism_options = [True, False]
 
-# Combination 1
+    # Create all combinations of the parameters
+    combinations = list(itertools.product(selection_methods, crossover_methods, 
+                                        mutation_methods, elitism_options))
 
-best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, computational_time = genetic_algorithm(
-    job_operations,
-    population_size=200,
-    generations=500,
-    crossover_rate=0.8,
-    mutation_rate=0.05,
-    elitism=False,
-    selection_method="rank",
-    crossover_method="two_point",
-    mutation_method="swap"
-)
+    # Store results for comparison
+    all_results = []
 
-plot_fitness_history(fitness_history)
+    # Iterate through all combinations and run the genetic algorithm
+    for i, (selection_method, crossover_method, mutation_method, elitism) in enumerate(combinations, start=1):
+        print(f"\nTesting combination {i}: {selection_method}, {crossover_method}, "
+              f"{mutation_method}, Elitism={elitism}")
+
+        # Run genetic algorithm with the current combination of parameters
+        (best_solution, best_fitness, avg_fitness, generation_converged,
+         total_job_processing_time, max_fitness, fitness_history) = genetic_algorithm(
+            job_operations,
+            population_size=100,
+            selection_method=selection_method,
+            crossover_method=crossover_method,
+            mutation_method=mutation_method,
+            elitism=elitism
+        )
+
+        # Store results
+        result = {
+            'combination': f"Sel:{selection_method}, Cross:{crossover_method}, "
+                         f"Mut:{mutation_method}, Elit:{elitism}",
+            'best_fitness': best_fitness,
+            'avg_fitness': avg_fitness,
+            'generations': generation_converged,
+            'total_time': total_job_processing_time,
+            'max_fitness': max_fitness
+        }
+        all_results.append(result)
+
+        # Create plot title
+        title = f"Fitness Evolution\n{selection_method.capitalize()} Selection, "
+        title += f"{crossover_method.capitalize()} Crossover\n"
+        title += f"{mutation_method.capitalize()} Mutation, "
+        title += f"Elitism={'On' if elitism else 'Off'}"
+
+        # Plot and save the fitness evolution
+        plot_filename = f"fitness_evolution_{i}.png"
+        plot_fitness_evolution(fitness_history, title, save_path=plot_filename)
+
+        # Print results
+        print(f"Best Fitness: {best_fitness}")
+        print(f"Average Fitness: {avg_fitness}")
+        print(f"Generations to Converge: {generation_converged}")
+        print(f"Total Job Processing Time: {total_job_processing_time}")
+
+    # Print comparison of all results
+    print("\nComparison of all combinations:")
+    for result in sorted(all_results, key=lambda x: x['best_fitness']):
+        print(f"\nCombination: {result['combination']}")
+        print(f"Best Fitness: {result['best_fitness']}")
+        print(f"Average Fitness: {result['avg_fitness']}")
+        print(f"Generations: {result['generations']}")
+        print(f"Total Time: {result['total_time']}")
+
+def main():
+    # Read problem
+    job_operations = read_job_operations_from_file('problem1.txt')
+    
+    # Test all combinations
+    test_combinations(job_operations)
+
+if __name__ == "__main__":
+    main()
