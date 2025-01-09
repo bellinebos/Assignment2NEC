@@ -53,100 +53,95 @@ def decode_chromosome(chromosome, job_operations):
     total_processing_time = max(machine_times.values())
     return machine_schedules, machine_times, total_processing_time
 
-def genetic_algorithm(job_operations, population_size=100, generations=500, crossover_rate=0.8, mutation_rate=0.01, elitism=True,
-                      selection_method="rank", crossover_method="two_point", mutation_method="swap"):
-
-    print(f"Running with Combination: Selection={selection_method}, Crossover={crossover_method}, Mutation={mutation_method}, Elitism={elitism}")
-
-    num_jobs = len(job_operations)
-    num_tasks = max(len(job) for job in job_operations)  # Maximum tasks across jobs
-    population = generate_initial_population(num_jobs, num_tasks, population_size)
-
+def genetic_algorithm(job_operations, population_size=50, max_generations=5000, 
+                     crossover_rate=0.8, mutation_rate=0.05, plateau_threshold=50, 
+                     selection_method="tournament", crossover_method="two_point", 
+                     mutation_method="swap", elitism=True):
+    """
+    Main genetic algorithm with configurable operators and elitism.
+    Now returns fitness_history as well.
+    """
+    population = initialize_pop(job_operations, population_size)
     best_fitness = float('inf')
     best_solution = None
-    fitness_history = []
-    avg_fitness_history = []
-    generation_converged = 0
-
-    for generation in range(generations):
-        fitness = [compute_fitness(individual, job_operations) for individual in population]
+    fitness_history = []  # List to store best fitness of each generation
+    plateau_count = 0
+    
+    for gen in range(max_generations):
+        # Calculate fitness for all individuals
+        fitness = [compute_fitness(ind, job_operations) for ind in population]
+        gen_best_fitness = min(fitness)
+        fitness_history.append(gen_best_fitness)  # Store the best fitness of this generation
         
-        # Track the best fitness
-        generation_best_fitness = min(fitness)
-        fitness_history.append(generation_best_fitness)
-
-        avg_fitness = np.mean(fitness)
-        avg_fitness_history.append(avg_fitness)
-
-        if generation > 0 and generation_best_fitness == fitness_history[generation - 1]:
-            generation_converged += 1
+        # Update best solution
+        if gen_best_fitness < best_fitness:
+            best_fitness = gen_best_fitness
+            best_solution = population[fitness.index(gen_best_fitness)]
+            plateau_count = 0
         else:
-            generation_converged = 0
-
-        # Elitism: Keep the best individual
+            plateau_count += 1
+        
+        # Check for plateau
+        if plateau_count >= plateau_threshold:
+            print(f"\nPlateau reached at generation {gen}")
+            break
+        
+        # Create new population
         new_population = []
+        
+        # Apply elitism if enabled
         if elitism:
-            elite_idx = np.argmin(fitness)
+            elite_idx = fitness.index(min(fitness))
             new_population.append(population[elite_idx])
-
+        
+        # Generate rest of the population
         while len(new_population) < population_size:
-            if selection_method == "rank":
-                parent1 = rank_selection(population, fitness)
-                parent2 = rank_selection(population, fitness)
-            elif selection_method == "tournament":
+            # Selection
+            if selection_method == "tournament":
                 parent1 = tournament_selection(population, fitness)
                 parent2 = tournament_selection(population, fitness)
-
-            if crossover_method == "two_point":
-                if random.random() < crossover_rate:
+            else:  # rank selection
+                parent1, parent2 = rank_selection(population, fitness)
+            
+            # Crossover
+            if random.random() < crossover_rate:
+                if crossover_method == "two_point":
                     child1, child2 = two_point_crossover(parent1, parent2)
-                else:
-                    child1, child2 = parent1[:], parent2[:]
-            elif crossover_method == "uniform":
-                if random.random() < crossover_rate:
+                else:  # uniform crossover
                     child1, child2 = uniform_crossover(parent1, parent2)
-                else:
-                    child1, child2 = parent1[:], parent2[:]
-
-            if mutation_method == "swap":
-                if random.random() < mutation_rate:
-                    swap_mutation(child1)
-                if random.random() < mutation_rate:
-                    swap_mutation(child2)
-            elif mutation_method == "inverse":
-                if random.random() < mutation_rate:
-                    inverse_mutation(child1)
-                if random.random() < mutation_rate:
-                    inverse_mutation(child2)
-
-            new_population.extend([repair_chromosome(child1), repair_chromosome(child2)])
-
-        # Update the population
+            else:
+                child1, child2 = parent1.copy(), parent2.copy()
+            
+            # Mutation
+            if random.random() < mutation_rate:
+                if mutation_method == "swap":
+                    child1 = swap_mutation(child1)
+                else:  # inverse mutation
+                    child1 = inverse_mutation(child1)
+            
+            if random.random() < mutation_rate:
+                if mutation_method == "swap":
+                    child2 = swap_mutation(child2)
+                else:  # inverse mutation
+                    child2 = inverse_mutation(child2)
+            
+            new_population.extend([child1, child2])
+        
+        # Trim population to exact size
         population = new_population[:population_size]
-
-        if generation_best_fitness < best_fitness:
-            best_fitness = generation_best_fitness
-            best_solution = population[np.argmin(fitness)]
-
-        print(f"Generation {generation + 1}: Best Fitness = {generation_best_fitness}, Average Fitness = {avg_fitness}")
-
-        if generation_converged > 50:
-            print(f"Convergence detected at generation {generation + 1}")
-            break
-
-    # Decode the best solution to get the schedule and machine times
-    machine_schedules, machine_times = decode_chromosome(best_solution, job_operations)
+        
+        # Print progress
+        if gen % 10 == 0:
+            print(f"Generation {gen}, Best Fitness: {gen_best_fitness}")
     
-    # Calculate the processing time (makespan) of the best solution
-    processing_time = max(machine_times.values())
-
-    print(f"Best Fitness: {best_fitness}")
-    print(f"Average Fitness (last generation): {avg_fitness}")
-    print(f"Generations to Converge: {generation_converged}")
-    print(f"Processing Time (Makespan) of Best Solution: {processing_time}")
-
-    # Returning the solution, fitness, processing time, etc.
-    return best_solution, best_fitness, fitness_history, avg_fitness_history, generation_converged, processing_time
+    # Calculate final results
+    machine_schedules, machine_times, total_processing_time = decode_chromosome(best_solution, job_operations)
+    avg_fitness = sum(fitness_history) / len(fitness_history)
+    generation_converged = len(fitness_history) - plateau_count
+    
+    # Return fitness_history along with other results
+    return (best_solution, best_fitness, avg_fitness, generation_converged, 
+            total_processing_time, max(fitness_history), fitness_history)
 
 def compute_fitness(individual, job_operations):
     """
