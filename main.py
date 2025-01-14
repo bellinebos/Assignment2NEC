@@ -233,11 +233,6 @@ def plot_fitness_evolution(fitness_history, title, save_path=None):
     """
     Plot the evolution of the minimum total traveling distance (fitness)
     throughout the generations.
-    
-    Args:
-        fitness_history: List of best fitness values for each generation
-        title: Title for the plot
-        save_path: Optional path to save the figure
     """
     plt.figure(figsize=(10, 6))
     plt.plot(fitness_history, 'b-', linewidth=2)
@@ -266,9 +261,6 @@ def plot_fitness_evolution(fitness_history, title, save_path=None):
     plt.show()
 
 def test_combinations(job_operations):
-    """
-    Modified test_combinations function to handle the fitness_history
-    """
     # Define all the parameter combinations
     selection_methods = ["tournament", "rank"]
     crossover_methods = ["two_point", "uniform"]
