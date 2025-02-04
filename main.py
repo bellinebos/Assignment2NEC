@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import random
 import itertools
@@ -7,25 +6,33 @@ def read_job_operations_from_file(file_name):
     job_operations = []
     with open(file_name, 'r') as file:
         for line in file:
+            # Read values from each line and convert to integers
             values = list(map(int, line.strip().split()))
+            # Create tuples of (machine, processing_time) for each operation
             operations = [(values[i], values[i+1]) for i in range(0, len(values), 2)]
+            # Append the operations for each job to job_operations
             job_operations.append(operations)
     return job_operations
 
 def initialize_pop(job_operations, population_size):
     population = []
+    # Create a list of all job tasks as tuples (job_id, task_id)
     all_job_tasks = [(j, t) for j in range(len(job_operations)) 
                      for t in range(len(job_operations[j]))]
     
     for _ in range(population_size):
+        # Create a copy of all job tasks for each individual
         individual = all_job_tasks.copy()
+        # Shuffle the tasks randomly
         random.shuffle(individual)
+        # Append the shuffled individual to the population
         population.append(individual)
     return population
 
 def decode_chromosome(chromosome, job_operations):
     machine_schedules = {}
     machine_times = {}
+    # Initialize job end times to 0 for each job
     job_end_times = {j: 0 for j in range(len(job_operations))}
     
     # Initialize machine schedules and times
@@ -37,24 +44,29 @@ def decode_chromosome(chromosome, job_operations):
     for job_id, task_id in chromosome:
         machine, processing_time = job_operations[job_id][task_id]
         job_start_time = job_end_times[job_id]
+        # Calculate task start time as the maximum of machine availability and job's previous task completion
         task_start_time = max(machine_times[machine], job_start_time)
+        # Calculate task end time by adding processing time to start time
         task_end_time = task_start_time + processing_time
         
+        # Append task details to machine schedule
         machine_schedules[machine].append({
             'job': job_id,
             'task': task_id,
             'start': task_start_time,
             'end': task_end_time
         })
+        # Update machine availability time
         machine_times[machine] = task_end_time
+        # Update job completion time
         job_end_times[job_id] = task_end_time
     
-    # Return three values: machine schedules, machine times, and total processing time
+    # Return machine schedules, machine times, and total processing time (makespan)
     total_processing_time = max(machine_times.values())
     return machine_schedules, machine_times, total_processing_time
 
 def genetic_algorithm(job_operations, population_size=50, max_generations=5000, 
-                     crossover_rate=0.8, mutation_rate=0.05, plateau_threshold=50, 
+                     crossover_rate=0.8, mutation_rate=0.05, plateau_threshold=100, 
                      selection_method="tournament", crossover_method="two_point", 
                      mutation_method="swap", elitism=True):
     """
@@ -148,6 +160,31 @@ def compute_fitness(individual, job_operations):
     _, machine_times, _ = decode_chromosome(individual, job_operations)
     return max(machine_times.values())  # Makespan
 
+def enforce_constraints(individual, job_operations):
+    # Constraint 1: No task starts until previous task completed
+    job_end_times = {j: 0 for j in range(len(job_operations))}
+    # Sort by job and task ID to ensure task order within jobs
+    individual_sorted = sorted(individual, key=lambda x: (x[0], x[1]))
+    
+    result = []
+    # Constraint 2: Machine can only work on one task at a time
+    machine_times = {m: 0 for m in range(len(job_operations))}
+    
+    for job_id, task_id in individual_sorted:
+        machine, processing_time = job_operations[job_id][task_id]
+        
+        job_start_time = job_end_times[job_id]
+        # Takes maximum of machine availability and job's previous task completion
+        task_start_time = max(machine_times[machine], job_start_time)
+        
+        # Constraint 3: Task must run to completion
+        task_end_time = task_start_time + processing_time
+        
+        result.append((job_id, task_id))
+        job_end_times[job_id] = task_end_time  # Update job completion time
+        machine_times[machine] = task_end_time  # Update machine availability
+    return result
+
 def tournament_selection(population, fitness, tournament_size=3):
     """
     Select an individual using tournament selection.
@@ -214,33 +251,6 @@ def uniform_crossover(parent1, parent2, job_operations):
 
     return child1, child2
 
-
-def enforce_constraints(individual, job_operations):
-    # Constraint 1: No task starts until previous task completed
-    job_end_times = {j: 0 for j in range(len(job_operations))}
-    # Sort by job and task ID to ensure task order within jobs
-    individual_sorted = sorted(individual, key=lambda x: (x[0], x[1]))
-    
-    result = []
-    # Constraint 2: Machine can only work on one task at a time
-    machine_times = {m: 0 for m in range(len(job_operations))}
-    
-    for job_id, task_id in individual_sorted:
-        machine, processing_time = job_operations[job_id][task_id]
-        
-        job_start_time = job_end_times[job_id]
-        # Takes maximum of machine availability and job's previous task completion
-        task_start_time = max(machine_times[machine], job_start_time)
-        
-        # Constraint 3: Task must run to completion
-        task_end_time = task_start_time + processing_time
-        
-        result.append((job_id, task_id))
-        job_end_times[job_id] = task_end_time  # Update job completion time
-        machine_times[machine] = task_end_time  # Update machine availability
-    return result
-
-
 def swap_mutation(individual, job_operations):
     """
     Perform swap mutation by exchanging two random positions.
@@ -256,7 +266,6 @@ def swap_mutation(individual, job_operations):
     
     return result
 
-
 def inverse_mutation(individual, job_operations):
     """
     Perform inverse mutation on the given individual.
@@ -270,7 +279,6 @@ def inverse_mutation(individual, job_operations):
 
     # Enforce constraints with the updated individual
     return enforce_constraints(individual, job_operations)
-
 
 def plot_fitness_evolution(fitness_history, title, save_path=None):
     """
@@ -326,7 +334,7 @@ def test_combinations(job_operations):
         (best_solution, best_fitness, avg_fitness, generation_converged,
          total_job_processing_time, max_fitness, fitness_history) = genetic_algorithm(
             job_operations,
-            population_size=200,
+            population_size=200,    # adjust population size according to problem: 200 for problem 1, 400 for problem 2 and 600 for problem 3
             selection_method=selection_method,
             crossover_method=crossover_method,
             mutation_method=mutation_method,
@@ -357,7 +365,7 @@ def test_combinations(job_operations):
 
 def main():
     # Read the job operations from the file (adjust the file path as needed)
-    job_operations = read_job_operations_from_file('problem1.txt')
+    job_operations = read_job_operations_from_file('problem1.txt') #adjust txt file to problem1.txt, problem2.txt or problmem3.txt
     
     # Test all combinations of selection, crossover, mutation methods, and elitism options
     results = test_combinations(job_operations)
