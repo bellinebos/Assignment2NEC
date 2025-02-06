@@ -130,13 +130,6 @@ def genetic_algorithm(job_operations, population_size=50, max_generations=5000,
                 child1 = swap_mutation(child1, job_operations)
               else:  # inverse mutation
                 child1 = inverse_mutation(child1, job_operations)
-
-            
-            if random.random() < mutation_rate:
-              if mutation_method == "swap":
-                child2 = swap_mutation(child2, job_operations)
-              else:  # inverse mutation
-                child2 = inverse_mutation(child2, job_operations)
             
             new_population.extend([child1, child2])
         
